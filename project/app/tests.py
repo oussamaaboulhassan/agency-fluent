@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
@@ -52,3 +54,26 @@ class MarketplaceAutomationTests(TestCase):
         )
 
         call_command("run_marketplace_automation")
+
+    def test_automation_dashboard_url(self):
+        response = self.client.get("/automation/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_automation_data_api_url(self):
+        response = self.client.get("/automation/data/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("summary", response.json())
+
+    @patch("app.views.call_command")
+    def test_run_automation_from_web_dry_mode(self, mock_call_command):
+        response = self.client.post("/automation/run/", {"mode": "dry"})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/automation/")
+        mock_call_command.assert_called_once_with("run_marketplace_automation")
+
+    @patch("app.views.call_command")
+    def test_run_automation_from_web_live_mode(self, mock_call_command):
+        response = self.client.post("/automation/run/", {"mode": "live"})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/automation/")
+        mock_call_command.assert_called_once_with("run_marketplace_automation", "--live")
