@@ -39,10 +39,3 @@ Use cron (Linux) to run daily at 9 AM:
 ```bash
 0 9 * * * cd /workspace/agency-fluent/project && /usr/bin/python3 manage.py run_marketplace_automation
 ```
-
-## Web access
-
-- Dashboard page: `/automation/`
-- JSON data endpoint: `/automation/data/`
-- Trigger automation from web: `/automation/run/` (POST endpoint used by dashboard buttons)
-
