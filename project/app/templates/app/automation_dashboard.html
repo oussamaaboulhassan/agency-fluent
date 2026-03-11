@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketplace Automation Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background:#0f172a; color:#e2e8f0; }
+    h1, h2 { margin-bottom: 0.5rem; }
+    .stats { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap: wrap; }
+    .card { background:#1e293b; padding:1rem; border-radius:8px; min-width:180px; }
+    table { width:100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+    th, td { border:1px solid #334155; padding:0.6rem; text-align:left; }
+    th { background:#1e293b; }
+    a { color:#38bdf8; }
+    .muted { color:#94a3b8; font-size:0.9rem; }
+    .actions { background:#1e293b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+    button { padding: 0.55rem 1rem; border: none; border-radius: 5px; cursor: pointer; margin-right: 0.5rem; }
+    .btn-dry { background:#0ea5e9; color:#fff; }
+    .btn-live { background:#ef4444; color:#fff; }
+    .message { background:#14532d; border:1px solid #22c55e; color:#dcfce7; padding:0.75rem; border-radius:6px; margin-bottom:1rem; }
+  </style>
+</head>
+<body>
+  <h1>Facebook Marketplace Automation</h1>
+  <p class="muted">Access the tool from this page and trigger runs directly from the web.</p>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="message">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="actions">
+    <h2>Run Automation Tool</h2>
+    <form method="post" action="/automation/run/">
+      {% csrf_token %}
+      <button class="btn-dry" type="submit" name="mode" value="dry">Run Dry-Run</button>
+      <button class="btn-live" type="submit" name="mode" value="live">Run Live</button>
+    </form>
+    <p class="muted">Dry-run is safe testing mode. Live mode attempts Playwright browser actions.</p>
+  </div>
+
+  <div class="stats">
+    <div class="card"><strong>Listings</strong><br>{{ listing_count }}</div>
+    <div class="card"><strong>Groups</strong><br>{{ group_count }}</div>
+    <div class="card"><strong>Recent Runs</strong><br>{{ runs|length }}</div>
+  </div>
+
+  <h2>Listings & Target Groups</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Price</th>
+        <th>Location</th>
+        <th>Groups</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for listing in listings %}
+      <tr>
+        <td>{{ listing.title }}</td>
+        <td>{{ listing.price }}</td>
+        <td>{{ listing.location|default:"-" }}</td>
+        <td>
+          {% for group in listing.groups.all %}
+            <div>{{ group.name }} {% if group.reshare_daily %}(daily){% endif %}</div>
+          {% empty %}
+            <span class="muted">No groups selected</span>
+          {% endfor %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4">No listings yet.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Recent Automation Runs</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Started</th>
+        <th>Completed</th>
+        <th>Dry Run</th>
+        <th>Listings Posted</th>
+        <th>Groups Shared</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for run in runs %}
+      <tr>
+        <td>{{ run.id }}</td>
+        <td>{{ run.started_at }}</td>
+        <td>{{ run.completed_at|default:"-" }}</td>
+        <td>{{ run.dry_run }}</td>
+        <td>{{ run.listings_posted }}</td>
+        <td>{{ run.groups_shared }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6">No automation runs yet.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p>JSON API: <a href="/automation/data/">/automation/data/</a></p>
+</body>
+</html>
